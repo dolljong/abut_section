@@ -31,54 +31,49 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // --- 2. Calculate Scale and Centering ---
-        const dimensionLineOffset = 2000; // Space above the abutment for dimension line
-        const dimensionTextGap = 500;    // Additional gap for text readability
-        const totalWidth = dims.frontToeLength + dims.wallThickness + dims.backHeelLength;
-        const totalHeight = dims.foundationThickness + dims.wallHeight + dims.breastWallHeight + dimensionLineOffset + dimensionTextGap;
+        const hDimOffset = 2000; // Horizontal dimension line space
+        const hDimGap = 500;     // Horizontal dimension text gap
+        const vDimOffset = 2000; // Vertical dimension line space
+        const vDimGap = 1000;    // Vertical dimension text gap
 
-        const padding = 50; // Canvas padding in pixels
+        const abutmentWidth = dims.frontToeLength + dims.wallThickness + dims.backHeelLength;
+        const abutmentHeight = dims.foundationThickness + dims.wallHeight + dims.breastWallHeight;
+
+        const totalDrawingWidth = abutmentWidth + vDimOffset + vDimGap;
+        const totalDrawingHeight = abutmentHeight + hDimOffset + hDimGap;
+
+        const padding = 50;
         const canvasContentWidth = canvas.width - 2 * padding;
         const canvasContentHeight = canvas.height - 2 * padding;
 
-        const scale = Math.min(canvasContentWidth / totalWidth, canvasContentHeight / totalHeight);
+        const scale = Math.min(canvasContentWidth / totalDrawingWidth, canvasContentHeight / totalDrawingHeight);
 
         const s = {};
         for (const key in dims) {
             s[key] = dims[key] * scale;
         }
-        const sTotalWidth = totalWidth * scale;
-        const sTotalHeight = totalHeight * scale;
 
-        const offsetX = (canvas.width - sTotalWidth) / 2;
-        const offsetY = (canvas.height - sTotalHeight) / 2;
+        const sTotalDrawingWidth = totalDrawingWidth * scale;
+        const sTotalDrawingHeight = totalDrawingHeight * scale;
+        const finalOffsetX = (canvas.width - sTotalDrawingWidth) / 2;
+        const finalOffsetY = (canvas.height - sTotalDrawingHeight) / 2;
 
         // --- 3. Define Polygon Coordinates ---
-        // We shift the entire drawing down to make space for the dimension lines at the top.
-        const drawingOffsetY = offsetY + (dimensionLineOffset + dimensionTextGap) * scale;
+        const drawingOffsetX = finalOffsetX + (vDimOffset + vDimGap) * scale;
+        const drawingOffsetY = finalOffsetY + (hDimOffset + hDimGap) * scale;
 
         const p = [
-            // P0: Bottom-left of foundation
-            { x: offsetX, y: drawingOffsetY + s.breastWallHeight + s.wallHeight + s.foundationThickness },
-            // P1: Bottom-right of foundation
-            { x: offsetX + sTotalWidth, y: drawingOffsetY + s.breastWallHeight + s.wallHeight + s.foundationThickness },
-            // P2: Top-right of foundation (at back heel)
-            { x: offsetX + sTotalWidth, y: drawingOffsetY + s.breastWallHeight + s.wallHeight },
-            // P3: Wall base back
-            { x: offsetX + s.frontToeLength + s.wallThickness, y: drawingOffsetY + s.breastWallHeight + s.wallHeight },
-            // P4: Wall top back
-            { x: offsetX + s.frontToeLength + s.wallThickness, y: drawingOffsetY + s.breastWallHeight },
-            // P5: Breast wall top back
-            { x: offsetX + s.frontToeLength + s.wallThickness, y: drawingOffsetY },
-            // P6: Breast wall top front
-            { x: offsetX + s.frontToeLength + s.wallThickness - s.breastWallThickness, y: drawingOffsetY },
-            // P7: Breast wall bottom front
-            { x: offsetX + s.frontToeLength + s.wallThickness - s.breastWallThickness, y: drawingOffsetY + s.breastWallHeight },
-            // P8: Wall top front
-            { x: offsetX + s.frontToeLength, y: drawingOffsetY + s.breastWallHeight },
-            // P9: Wall base front
-            { x: offsetX + s.frontToeLength, y: drawingOffsetY + s.breastWallHeight + s.wallHeight },
-            // P10: Foundation top front (at front toe)
-            { x: offsetX, y: drawingOffsetY + s.breastWallHeight + s.wallHeight },
+            { x: drawingOffsetX, y: drawingOffsetY + s.breastWallHeight + s.wallHeight + s.foundationThickness },
+            { x: drawingOffsetX + s.frontToeLength + s.wallThickness + s.backHeelLength, y: drawingOffsetY + s.breastWallHeight + s.wallHeight + s.foundationThickness },
+            { x: drawingOffsetX + s.frontToeLength + s.wallThickness + s.backHeelLength, y: drawingOffsetY + s.breastWallHeight + s.wallHeight },
+            { x: drawingOffsetX + s.frontToeLength + s.wallThickness, y: drawingOffsetY + s.breastWallHeight + s.wallHeight },
+            { x: drawingOffsetX + s.frontToeLength + s.wallThickness, y: drawingOffsetY + s.breastWallHeight },
+            { x: drawingOffsetX + s.frontToeLength + s.wallThickness, y: drawingOffsetY },
+            { x: drawingOffsetX + s.frontToeLength + s.wallThickness - s.breastWallThickness, y: drawingOffsetY },
+            { x: drawingOffsetX + s.frontToeLength + s.wallThickness - s.breastWallThickness, y: drawingOffsetY + s.breastWallHeight },
+            { x: drawingOffsetX + s.frontToeLength, y: drawingOffsetY + s.breastWallHeight },
+            { x: drawingOffsetX + s.frontToeLength, y: drawingOffsetY + s.breastWallHeight + s.wallHeight },
+            { x: drawingOffsetX, y: drawingOffsetY + s.breastWallHeight + s.wallHeight },
         ];
 
         // --- 4. Draw Abutment on Canvas ---
@@ -89,18 +84,74 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ctx.beginPath();
         ctx.moveTo(p[0].x, p[0].y);
-        for (let i = 1; i < p.length; i++) {
-            ctx.lineTo(p[i].x, p[i].y);
-        }
+        for (let i = 1; i < p.length; i++) { ctx.lineTo(p[i].x, p[i].y); }
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
 
         // --- 5. Draw Dimension Lines ---
-        drawHorizontalDimensions(dims, scale, offsetX, drawingOffsetY, p);
+        drawHorizontalDimensions(dims, scale, drawingOffsetX, drawingOffsetY, p);
+        drawVerticalDimensions(dims, scale, drawingOffsetX, drawingOffsetY, p);
     }
 
-    function drawHorizontalDimensions(dims, scale, offsetX, drawingOffsetY, p) {
+    function drawVerticalDimensions(dims, scale, drawingOffsetX, drawingOffsetY, p) {
+        const s = (dim) => dim * scale;
+        const dimensionLineX = drawingOffsetX - s(2000);
+        const textX = dimensionLineX - 10;
+        const tickSize = 5;
+
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 1;
+        ctx.fillStyle = 'black';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+
+        const yLevels = {
+            breastTop: p[5].y,
+            wallTop: p[4].y,
+            foundationTop: p[10].y,
+            foundationBottom: p[0].y,
+        };
+
+        const segments = [
+            { start: yLevels.breastTop, end: yLevels.wallTop, label: dims.breastWallHeight },
+            { start: yLevels.wallTop, end: yLevels.foundationTop, label: dims.wallHeight },
+            { start: yLevels.foundationTop, end: yLevels.foundationBottom, label: dims.foundationThickness }
+        ];
+
+        // Draw main vertical line
+        ctx.beginPath();
+        ctx.moveTo(dimensionLineX, yLevels.breastTop);
+        ctx.lineTo(dimensionLineX, yLevels.foundationBottom);
+        ctx.stroke();
+
+        // Draw extension lines and ticks
+        const extensionLineOriginX = p[10].x;
+        segments.forEach((seg, index) => {
+            const allYLevels = [yLevels.breastTop, yLevels.wallTop, yLevels.foundationTop, yLevels.foundationBottom];
+            [seg.start, seg.end].forEach(y => {
+                ctx.strokeStyle = '#888';
+                ctx.beginPath();
+                ctx.moveTo(extensionLineOriginX, y);
+                ctx.lineTo(dimensionLineX, y);
+                ctx.stroke();
+
+                ctx.strokeStyle = 'black';
+                ctx.beginPath();
+                ctx.moveTo(dimensionLineX - tickSize, y);
+                ctx.lineTo(dimensionLineX + tickSize, y);
+                ctx.stroke();
+            });
+
+            if (seg.label > 0) {
+                const centerY = (seg.start + seg.end) / 2;
+                ctx.fillText(seg.label.toString(), textX, centerY);
+            }
+        });
+    }
+
+    function drawHorizontalDimensions(dims, scale, drawingOffsetX, drawingOffsetY, p) {
         const s = (dim) => dim * scale;
         const dimensionLineY = drawingOffsetY - s(2000);
         const textY = dimensionLineY - 10;
@@ -114,11 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.textBaseline = 'bottom';
 
         const xCoords = {
-            frontToeStart: p[10].x,
-            wallFront: p[9].x,
-            breastWallFront: p[6].x,
-            wallBack: p[5].x,
-            backHeelEnd: p[2].x
+            frontToeStart: p[10].x, wallFront: p[9].x, breastWallFront: p[6].x,
+            wallBack: p[5].x, backHeelEnd: p[2].x
         };
 
         const segments = [
@@ -128,36 +176,28 @@ document.addEventListener('DOMContentLoaded', () => {
             { start: xCoords.wallBack, end: xCoords.backHeelEnd, label: dims.backHeelLength, from: p[3], to: p[2] }
         ];
 
-        // Draw main horizontal dimension line
         ctx.beginPath();
         ctx.moveTo(xCoords.frontToeStart, dimensionLineY);
         ctx.lineTo(xCoords.backHeelEnd, dimensionLineY);
         ctx.stroke();
 
         segments.forEach(seg => {
-            // Draw extension lines from abutment to dimension line
             ctx.strokeStyle = '#888';
-            ctx.beginPath();
-            ctx.moveTo(seg.from.x, seg.from.y);
-            ctx.lineTo(seg.from.x, dimensionLineY - tickSize);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(seg.to.x, seg.to.y);
-            ctx.lineTo(seg.to.x, dimensionLineY - tickSize);
-            ctx.stroke();
+            [seg.from, seg.to].forEach(point => {
+                ctx.beginPath();
+                ctx.moveTo(point.x, point.y);
+                ctx.lineTo(point.x, dimensionLineY);
+                ctx.stroke();
+            });
 
-            // Draw ticks on the dimension line
             ctx.strokeStyle = 'black';
-            ctx.beginPath();
-            ctx.moveTo(seg.start, dimensionLineY - tickSize);
-            ctx.lineTo(seg.start, dimensionLineY + tickSize);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(seg.end, dimensionLineY - tickSize);
-            ctx.lineTo(seg.end, dimensionLineY + tickSize);
-            ctx.stroke();
+            [seg.start, seg.end].forEach(x => {
+                ctx.beginPath();
+                ctx.moveTo(x, dimensionLineY - tickSize);
+                ctx.lineTo(x, dimensionLineY + tickSize);
+                ctx.stroke();
+            });
 
-            // Draw label
             if (seg.label > 0) {
                 const centerX = (seg.start + seg.end) / 2;
                 ctx.fillText(seg.label.toString(), centerX, textY);
@@ -166,7 +206,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     drawButton.addEventListener('click', drawAbutment);
-
-    // Initial draw on page load
     drawAbutment();
 });
