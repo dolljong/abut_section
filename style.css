@@ -65,6 +65,23 @@ h1 {
     background-color: #0056b3;
 }
 
+.option-section {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.option-section label {
+    width: auto;
+    margin-bottom: 0;
+    margin-left: 5px;
+}
+
+.option-section input[type="checkbox"] {
+    width: auto;
+    margin-bottom: 0;
+}
+
 .canvas-section {
     background-color: #fff;
     border: 1px solid #ccc;
