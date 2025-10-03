@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>교대 단면도 생성기</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>교대 단면도 생성기</h1>
+    <div class="container">
+        <div class="input-section">
+            <h2>치수 입력 (mm)</h2>
+            <label for="breastWallThickness">흉벽두께:</label>
+            <input type="number" id="breastWallThickness" value="300">
+            <br>
+            <label for="breastWallHeight">흉벽높이:</label>
+            <input type="number" id="breastWallHeight" value="1000">
+            <br>
+            <label for="wallThickness">벽체두께:</label>
+            <input type="number" id="wallThickness" value="500">
+            <br>
+            <label for="wallHeight">벽체높이:</label>
+            <input type="number" id="wallHeight" value="5000">
+            <br>
+            <label for="foundationThickness">기초두께:</label>
+            <input type="number" id="foundationThickness" value="800">
+            <br>
+            <label for="frontToeLength">앞굽길이:</label>
+            <input type="number" id="frontToeLength" value="1000">
+            <br>
+            <label for="backHeelLength">뒷굽길이:</label>
+            <input type="number" id="backHeelLength" value="1000">
+            <br>
+            <button id="drawButton">그리기</button>
+        </div>
+        <div class="canvas-section">
+            <canvas id="abutmentCanvas" width="600" height="600"></canvas>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
