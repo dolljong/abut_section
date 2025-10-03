@@ -31,23 +31,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // --- 2. Calculate Scale and Centering ---
-        const hDimOffset = 2000;
-        const vDimOffset = 2000;
-        const extensionOverhang = 1000; // Length of extension line past dimension line
-        const textGap = 500; // Gap for text
+        const dimOffset = 1000; // Offset from structure to dimension line
+        const textGap = 800;   // Gap for text to prevent overlap
 
         const abutmentWidth = dims.frontToeLength + dims.wallThickness + dims.backHeelLength;
         const abutmentHeight = dims.foundationThickness + dims.wallHeight + dims.breastWallHeight;
 
-        const totalDrawingWidth = abutmentWidth + vDimOffset + extensionOverhang + textGap;
-        const totalDrawingHeight = abutmentHeight + hDimOffset + extensionOverhang + textGap;
+        const totalDrawingWidth = abutmentWidth + dimOffset + textGap;
+        const totalDrawingHeight = abutmentHeight + dimOffset + textGap;
 
         const padding = 50;
         const canvasContentWidth = canvas.width - 2 * padding;
         const canvasContentHeight = canvas.height - 2 * padding;
 
         const scale = Math.min(canvasContentWidth / totalDrawingWidth, canvasContentHeight / totalDrawingHeight);
-
         const s = (dim) => dim * scale;
 
         const sTotalDrawingWidth = totalDrawingWidth * scale;
@@ -56,8 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const finalOffsetY = (canvas.height - sTotalDrawingHeight) / 2;
 
         // --- 3. Define Polygon Coordinates ---
-        const drawingOffsetX = finalOffsetX + s(vDimOffset + extensionOverhang + textGap);
-        const drawingOffsetY = finalOffsetY + s(hDimOffset + extensionOverhang + textGap);
+        const drawingOffsetX = finalOffsetX + s(dimOffset + textGap);
+        const drawingOffsetY = finalOffsetY + s(dimOffset + textGap);
 
         const p = [
             { x: drawingOffsetX, y: drawingOffsetY + s(dims.breastWallHeight) + s(dims.wallHeight) + s(dims.foundationThickness) },
@@ -76,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- 4. Draw Abutment and Dimensions ---
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Draw Abutment
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
         ctx.fillStyle = '#f0f0f0';
@@ -87,16 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fill();
         ctx.stroke();
 
-        // Draw Dimensions
         drawHorizontalDimensions(dims, scale, drawingOffsetX, drawingOffsetY, p);
         drawVerticalDimensions(dims, scale, drawingOffsetX, drawingOffsetY, p);
     }
 
     function drawVerticalDimensions(dims, scale, drawingOffsetX, drawingOffsetY, p) {
         const s = (dim) => dim * scale;
-        const extensionOverhang = s(1000);
-        const dimensionLineX = drawingOffsetX - s(2000);
-        const textX = dimensionLineX - extensionOverhang - 10;
+        const dimensionLineX = drawingOffsetX - s(1000);
+        const textX = dimensionLineX - 10;
         const tickSize = 5;
 
         ctx.strokeStyle = 'black';
@@ -123,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.strokeStyle = '#888';
             ctx.beginPath();
             ctx.moveTo(extensionLineOriginX, y);
-            ctx.lineTo(dimensionLineX - extensionOverhang, y);
+            ctx.lineTo(dimensionLineX, y); // Line goes from structure to dimension line
             ctx.stroke();
 
             ctx.strokeStyle = 'black';
@@ -142,9 +136,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function drawHorizontalDimensions(dims, scale, drawingOffsetX, drawingOffsetY, p) {
         const s = (dim) => dim * scale;
-        const extensionOverhang = s(1000);
-        const dimensionLineY = drawingOffsetY - s(2000);
-        const textY = dimensionLineY - extensionOverhang - 10;
+        const dimensionLineY = drawingOffsetY - s(1000);
+        const textY = dimensionLineY - 10;
         const tickSize = 5;
 
         ctx.strokeStyle = 'black';
@@ -175,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.strokeStyle = '#888';
                 ctx.beginPath();
                 ctx.moveTo(point.x, point.y);
-                ctx.lineTo(point.x, dimensionLineY - extensionOverhang);
+                ctx.lineTo(point.x, dimensionLineY); // Line goes from structure to dimension line
                 ctx.stroke();
             });
 
