@@ -35,14 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- 2. Calculate Scale and Centering ---
         const dimOffset = 2000;
-        const overhang = 1000;
         const textGap = 800;
 
         const abutmentWidth = dims.frontToeLength + dims.wallThickness + dims.backHeelLength;
         const abutmentHeight = dims.foundationThickness + dims.wallHeight + dims.breastWallHeight;
 
-        const totalDrawingWidth = abutmentWidth + dimOffset + overhang + textGap;
-        const totalDrawingHeight = abutmentHeight + dimOffset + overhang + textGap;
+        // Overhang is now drawn *inside* the dimOffset, so it doesn't contribute to total size
+        const totalDrawingWidth = abutmentWidth + dimOffset + textGap;
+        const totalDrawingHeight = abutmentHeight + dimOffset + textGap;
 
         const padding = 50;
         const canvasContentWidth = canvas.width - 2 * padding;
@@ -57,8 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const finalOffsetY = (canvas.height - sTotalDrawingHeight) / 2;
 
         // --- 3. Define Polygon Coordinates ---
-        const drawingOffsetX = finalOffsetX + s(dimOffset + overhang + textGap);
-        const drawingOffsetY = finalOffsetY + s(dimOffset + overhang + textGap);
+        const drawingOffsetX = finalOffsetX + s(dimOffset + textGap);
+        const drawingOffsetY = finalOffsetY + s(dimOffset + textGap);
 
         const p = [
             { x: drawingOffsetX, y: drawingOffsetY + s(dims.breastWallHeight + dims.wallHeight + dims.foundationThickness) },
@@ -87,20 +87,25 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fill();
         ctx.stroke();
 
-        drawHorizontalDimensions(dims, scale, drawingOffsetX, drawingOffsetY, p, showGuideLines);
-        drawVerticalDimensions(dims, scale, drawingOffsetX, drawingOffsetY, p, showGuideLines);
+        drawHorizontalDimensions(dims, scale, drawingOffsetY, p, showGuideLines);
+        drawVerticalDimensions(dims, scale, drawingOffsetX, p, showGuideLines);
     }
 
-    function drawVerticalDimensions(dims, scale, drawingOffsetX, drawingOffsetY, p, showGuideLines) {
+    function drawArrowhead(ctx, x, y, radius) {
+        ctx.fillStyle = 'black';
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+
+    function drawVerticalDimensions(dims, scale, drawingOffsetX, p, showGuideLines) {
         const s = (dim) => dim * scale;
         const dimensionLineX = drawingOffsetX - s(2000);
         const overhangLength = s(1000);
-        const textX = dimensionLineX - 10;
-        const tickSize = 5;
+        const arrowheadRadius = s(50);
+        const textX = dimensionLineX - 15;
 
         ctx.lineWidth = 1;
-        ctx.fillStyle = 'black';
-        ctx.font = '12px Arial';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
 
@@ -118,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.stroke();
 
         const extensionLineOriginX = p[10].x;
-        [yLevels.breastTop, yLevels.wallTop, yLevels.foundationTop, yLevels.foundationBottom].forEach(y => {
+        Object.values(yLevels).forEach(y => {
             if (showGuideLines) {
                 ctx.strokeStyle = '#888';
                 ctx.beginPath();
@@ -126,18 +131,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 ctx.lineTo(dimensionLineX, y);
                 ctx.stroke();
             }
-
             ctx.strokeStyle = '#888';
             ctx.beginPath();
             ctx.moveTo(dimensionLineX, y);
-            ctx.lineTo(dimensionLineX - overhangLength, y);
+            ctx.lineTo(dimensionLineX + overhangLength, y); // Towards structure
             ctx.stroke();
 
-            ctx.strokeStyle = 'black';
-            ctx.beginPath();
-            ctx.moveTo(dimensionLineX - tickSize, y);
-            ctx.lineTo(dimensionLineX + tickSize, y);
-            ctx.stroke();
+            drawArrowhead(ctx, dimensionLineX, y, arrowheadRadius);
         });
 
         segments.forEach(seg => {
@@ -145,16 +145,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function drawHorizontalDimensions(dims, scale, drawingOffsetX, drawingOffsetY, p, showGuideLines) {
+    function drawHorizontalDimensions(dims, scale, drawingOffsetY, p, showGuideLines) {
         const s = (dim) => dim * scale;
         const dimensionLineY = drawingOffsetY - s(2000);
         const overhangLength = s(1000);
-        const textY = dimensionLineY - 10;
-        const tickSize = 5;
+        const arrowheadRadius = s(50);
+        const textY = dimensionLineY - 15;
 
         ctx.lineWidth = 1;
-        ctx.fillStyle = 'black';
-        ctx.font = '12px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
 
@@ -163,10 +161,10 @@ document.addEventListener('DOMContentLoaded', () => {
             wallBack: p[5].x, backHeelEnd: p[2].x
         };
         const segments = [
-            { start: xCoords.frontToeStart, end: xCoords.wallFront, label: dims.frontToeLength, from: p[10], to: p[9] },
-            { start: xCoords.wallFront, end: xCoords.breastWallFront, label: dims.wallThickness - dims.breastWallThickness, from: p[8], to: p[6] },
-            { start: xCoords.breastWallFront, end: xCoords.wallBack, label: dims.breastWallThickness, from: p[6], to: p[5] },
-            { start: xCoords.wallBack, end: xCoords.backHeelEnd, label: dims.backHeelLength, from: p[3], to: p[2] }
+            { start: xCoords.frontToeStart, end: xCoords.wallFront, from: p[10], to: p[9], label: dims.frontToeLength },
+            { start: xCoords.wallFront, end: xCoords.breastWallFront, from: p[8], to: p[6], label: dims.wallThickness - dims.breastWallThickness },
+            { start: xCoords.breastWallFront, end: xCoords.wallBack, from: p[6], to: p[5], label: dims.breastWallThickness },
+            { start: xCoords.wallBack, end: xCoords.backHeelEnd, from: p[3], to: p[2], label: dims.backHeelLength }
         ];
 
         ctx.strokeStyle = 'black';
@@ -175,30 +173,30 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.lineTo(xCoords.backHeelEnd, dimensionLineY);
         ctx.stroke();
 
+        const allXPoints = new Map();
         segments.forEach(seg => {
-            [seg.from, seg.to].forEach(point => {
-                if (showGuideLines) {
-                    ctx.strokeStyle = '#888';
-                    ctx.beginPath();
-                    ctx.moveTo(point.x, point.y);
-                    ctx.lineTo(point.x, dimensionLineY);
-                    ctx.stroke();
-                }
+            allXPoints.set(seg.start, seg.from);
+            allXPoints.set(seg.end, seg.to);
+        });
+
+        allXPoints.forEach((structurePoint, dimLineX) => {
+            if (showGuideLines) {
                 ctx.strokeStyle = '#888';
                 ctx.beginPath();
-                ctx.moveTo(point.x, dimensionLineY);
-                ctx.lineTo(point.x, dimensionLineY - overhangLength);
+                ctx.moveTo(structurePoint.x, structurePoint.y);
+                ctx.lineTo(dimLineX, dimensionLineY);
                 ctx.stroke();
-            });
+            }
+            ctx.strokeStyle = '#888';
+            ctx.beginPath();
+            ctx.moveTo(dimLineX, dimensionLineY);
+            ctx.lineTo(dimLineX, dimensionLineY + overhangLength); // Towards structure
+            ctx.stroke();
 
-            [seg.start, seg.end].forEach(x => {
-                ctx.strokeStyle = 'black';
-                ctx.beginPath();
-                ctx.moveTo(x, dimensionLineY - tickSize);
-                ctx.lineTo(x, dimensionLineY + tickSize);
-                ctx.stroke();
-            });
+            drawArrowhead(ctx, dimLineX, dimensionLineY, arrowheadRadius);
+        });
 
+        segments.forEach(seg => {
             if (seg.label > 0) ctx.fillText(seg.label.toString(), (seg.start + seg.end) / 2, textY);
         });
     }
